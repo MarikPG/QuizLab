@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Профіль | QuizLab{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Профіль користувача</h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-4 text-center">
+                        {% if user.avatar %}
+                            <img src="{{ user.avatar.url }}" class="img-fluid rounded-circle mb-3" style="max-height: 150px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px; font-size: 40px;">
+                                {{ user.username|slice:":1"|upper }}
+                            </div>
+                        {% endif %}
+                        <h5>{{ user.username }}</h5>
+                        <span class="badge bg-info text-dark">{{ user.get_role_display }}</span>
+                    </div>
+                    <div class="col-md-8">
+                        <h5>Редагувати дані</h5>
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <button type="submit" class="btn btn-primary mt-2">Зберегти зміни</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

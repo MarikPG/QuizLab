@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Вхід | QuizLab{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h3 class="card-title text-center mb-4">Вхід у систему</h3>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Ім'я користувача</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Пароль</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Увійти</button>
+                </form>
+                <div class="mt-3 text-center">
+                    <small>Немає акаунта? <a href="{% url 'register' %}">Зареєструватися</a></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
