@@ -20,6 +20,10 @@ class Quiz(models.Model):
         default=30, 
         verbose_name="Час на питання (сек)"
     )
+    show_correct_immediately = models.BooleanField(
+        default=True, 
+        verbose_name="Показувати правильну відповідь одразу"
+    )
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 
@@ -49,7 +53,7 @@ class Question(models.Model):
     order = models.PositiveIntegerField(default=1, verbose_name="Порядок")
 
     def __str__(self):
-        return f"{self.quiz.title} - Питання #{self.order}"
+        return f"{self.quiz.title} — Питання #{self.order}"
 
 
 class Answer(models.Model):

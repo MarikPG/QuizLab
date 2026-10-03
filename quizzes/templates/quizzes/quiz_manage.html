@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Керування: {{ quiz.title }} | QuizLab{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>{{ quiz.title }} <span class="badge bg-secondary fs-6">Код: {{ quiz.code }}</span></h2>
+        <p class="text-muted mb-0">{{ quiz.description|default:"Без опису" }}</p>
+    </div>
+    <div>
+        <a href="{% url 'add_question' quiz.id %}" class="btn btn-success btn-lg">➕ Додати питання</a>
+    </div>
+</div>
+
+<hr>
+
+<h4 class="mb-3">Список питань ({{ questions.count }})</h4>
+
+<div class="row">
+    {% for question in questions %}
+        <div class="col-12 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">Питання #{{ question.order }}</span>
+                    {% if question.media %}
+                        <span class="badge bg-info text-dark">📷 Є медіа</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <p class="fs-5 card-text">{{ question.text }}</p>
+                    
+                    <div class="row g-2 mt-2">
+                        {% for answer in question.answers.all %}
+                            <div class="col-md-6">
+                                <div class="p-2 border rounded {% if answer.is_correct %}bg-success text-white{% else %}bg-light{% endif %}">
+                                    {% if answer.is_correct %}✅{% else %}❌{% endif %} {{ answer.text }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-warning text-center py-4">
+                <h5>У цьому квізі ще немає жодного питання!</h5>
+                <p>Натисніть кнопку <strong>"Додати питання"</strong> вище, щоб розпочати наповнення.</p>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

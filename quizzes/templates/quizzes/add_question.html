@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Додати питання | {{ quiz.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-9">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Додавання питання до квізу "{{ quiz.title }}"</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <h5 class="text-primary mb-3">1. Запитання та медіа</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-9">
+                            <label class="form-label fw-bold">Текст питання</label>
+                            {{ q_form.text }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Порядок</label>
+                            {{ q_form.order }}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Прикріпити медіа (фото/відео)</label>
+                        {{ q_form.media }}
+                    </div>
+
+                    <hr>
+
+                    <h5 class="text-primary mb-3">2. Варіанти відповідей</h5>
+                    <p class="text-muted small">Введіть варіанти відповідей та позначте правильні прапорцем.</p>
+
+                    {{ formset.management_form }}
+                    <div class="row g-3">
+                        {% for form in formset %}
+                            <div class="col-md-6">
+                                <div class="card p-3 border shadow-sm">
+                                    <div class="mb-2">
+                                        <label class="form-label fw-bold">Варіант #{{ forloop.counter }}</label>
+                                        {{ form.text }}
+                                    </div>
+                                    <div class="form-check">
+                                        {{ form.is_correct }}
+                                        <label class="form-check-label text-success fw-bold" for="{{ form.is_correct.id_for_label }}">
+                                            Це правильна відповідь
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'quiz_manage' quiz.id %}" class="btn btn-outline-secondary">Назад до квізу</a>
+                        <button type="submit" class="btn btn-success px-4">Зберегти питання</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
