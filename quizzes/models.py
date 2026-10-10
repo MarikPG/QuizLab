@@ -24,6 +24,10 @@ class Quiz(models.Model):
         default=True, 
         verbose_name="Показувати правильну відповідь одразу"
     )
+    is_public = models.BooleanField(
+        default=True, 
+        verbose_name="Публічний квіз"
+    )
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.CASCADE, 

@@ -3,52 +3,62 @@
 {% block title %}Керування: {{ quiz.title }} | QuizLab{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
     <div>
-        <h2>{{ quiz.title }} <span class="badge bg-secondary fs-6">Код: {{ quiz.code }}</span></h2>
-        <p class="text-muted mb-0">{{ quiz.description|default:"Без опису" }}</p>
+        <h2 class="fw-bold m-0">{{ quiz.title }}</h2>
+        <p class="text-muted mb-0">Код доступу: <span class="badge bg-secondary">{{ quiz.code }}</span></p>
     </div>
-    <div>
-        <a href="{% url 'add_question' quiz.id %}" class="btn btn-success btn-lg">➕ Додати питання</a>
+    <div class="d-flex gap-2">
+        <a href="{% url 'quiz_edit' quiz.id %}" class="btn btn-outline-primary">Редагувати квіз</a>
+        <a href="{% url 'add_question' quiz.id %}" class="btn btn-primary">+ Додати питання</a>
     </div>
 </div>
 
-<hr>
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <h5 class="fw-bold mb-3">Опис</h5>
+        <p class="text-muted">{{ quiz.description|default:"Опис відсутній" }}</p>
+    </div>
+</div>
 
-<h4 class="mb-3">Список питань ({{ questions.count }})</h4>
+<h3 class="fw-bold mb-3">Питання квізу</h3>
 
-<div class="row">
-    {% for question in questions %}
-        <div class="col-12 mb-3">
-            <div class="card shadow-sm">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <span class="fw-bold">Питання #{{ question.order }}</span>
-                    {% if question.media %}
-                        <span class="badge bg-info text-dark">📷 Є медіа</span>
-                    {% endif %}
-                </div>
-                <div class="card-body">
-                    <p class="fs-5 card-text">{{ question.text }}</p>
+{% if questions %}
+    <div class="list-group shadow-sm">
+        {% for question in questions %}
+            <div class="list-group-item p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <!-- Клікабельний блок із текстом питання -->
+                <a href="{% url 'edit_question' question.id %}" class="text-decoration-none text-body flex-grow-1">
+                    <h5 class="fw-bold mb-1 text-primary-hover">
+                        Питання #{{ forloop.counter }}: {{ question.text }}
+                    </h5>
+                    <small class="text-muted">Відповідей: {{ question.answers.count }} (натисніть для редагування)</small>
+                </a>
+                
+                <!-- Блок кнопок-іконок -->
+                <div class="d-flex align-items-center gap-2">
+                    <!-- Кнопка Редагувати (олівчик) -->
+                    <a href="{% url 'edit_question' question.id %}" class="btn btn-outline-primary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;" title="Редагувати">
+                        <i class="bi bi-pencil-fill"></i>
+                    </a>
                     
-                    <div class="row g-2 mt-2">
-                        {% for answer in question.answers.all %}
-                            <div class="col-md-6">
-                                <div class="p-2 border rounded {% if answer.is_correct %}bg-success text-white{% else %}bg-light{% endif %}">
-                                    {% if answer.is_correct %}✅{% else %}❌{% endif %} {{ answer.text }}
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
+                    <!-- Кнопка Видалити (кошик) -->
+                    <form method="post" action="{% url 'delete_question' question.id %}" onsubmit="return confirm('Ви впевнені, що хочете видалити це питання?');" class="m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;" title="Видалити">
+                            <i class="bi bi-trash-fill"></i>
+                        </button>
+                    </form>
                 </div>
             </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card shadow-sm border-0 text-center py-5">
+        <div class="card-body">
+            <p class="text-muted mb-3">У цьому квізі ще немає жодного питання.</p>
+            <a href="{% url 'add_question' quiz.id %}" class="btn btn-primary">Додати перше питання</a>
         </div>
-    {% empty %}
-        <div class="col-12">
-            <div class="alert alert-warning text-center py-4">
-                <h5>У цьому квізі ще немає жодного питання!</h5>
-                <p>Натисніть кнопку <strong>"Додати питання"</strong> вище, щоб розпочати наповнення.</p>
-            </div>
-        </div>
-    {% endfor %}
-</div>
+    </div>
+{% endif %}
 {% endblock %}
