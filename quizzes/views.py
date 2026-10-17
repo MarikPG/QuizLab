@@ -19,7 +19,7 @@ def home_view(request):
         if code:
             quiz = Quiz.objects.filter(code=code).first()
             if quiz:
-                return redirect('quiz_manage', quiz_id=quiz.id)
+                return redirect('start_quiz', quiz_id=quiz.id)
             else:
                 messages.error(request, 'Квіз із таким кодом не знайдено.')
 
@@ -93,10 +93,12 @@ def add_question_view(request, quiz_id):
         'formset': formset
     })
 
+
 @login_required
 def my_quizzes_view(request):
     quizzes = Quiz.objects.filter(author=request.user).order_by('-created_at')
     return render(request, 'quizzes/my_quizzes.html', {'quizzes': quizzes})
+
 
 @login_required
 def quiz_edit_view(request, quiz_id):
@@ -132,6 +134,7 @@ def delete_question_view(request, question_id):
         messages.success(request, 'Питання успішно видалено.')
 
     return redirect('quiz_manage', quiz_id=quiz.id)
+
 
 @login_required
 def edit_question_view(request, question_id):

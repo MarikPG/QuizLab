@@ -11,6 +11,62 @@
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-bs-theme', savedTheme);
     </script>
+
+    <style>
+        [data-bs-theme="dark"] {
+            --bs-body-bg: #121212;
+            --bs-body-color: #e0e0e0;
+        }
+
+        [data-bs-theme="dark"] .navbar,
+        [data-bs-theme="dark"] footer {
+            background-color: #1a1d20 !important;
+            border-bottom: 1px solid #2d3238;
+        }
+
+        [data-bs-theme="dark"] footer {
+            border-top: 1px solid #2d3238;
+            border-bottom: none;
+        }
+
+        [data-bs-theme="dark"] .card,
+        [data-bs-theme="dark"] .list-group-item {
+            background-color: #212529 !important;
+            color: #e0e0e0 !important;
+            border-color: #2d3238 !important;
+        }
+
+        /* Стилі для синіх кнопок у темній темі */
+        [data-bs-theme="dark"] .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            color: #ffffff;
+        }
+        [data-bs-theme="dark"] .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+        }
+
+        /* Контурні сині кнопки (btn-outline-secondary перетворюємо на виразні сині) */
+        [data-bs-theme="dark"] .btn-outline-secondary {
+            color: #3d8bfd;
+            border-color: #3d8bfd;
+        }
+        [data-bs-theme="dark"] .btn-outline-secondary:hover {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+            color: #ffffff;
+        }
+
+        [data-bs-theme="dark"] .btn-outline-primary {
+            color: #3d8bfd;
+            border-color: #3d8bfd;
+        }
+        [data-bs-theme="dark"] .btn-outline-primary:hover {
+            background-color: #0d6efd;
+            color: #ffffff;
+        }
+    </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
 
@@ -32,7 +88,6 @@
         </div>
     </nav>
 
-    <!-- Висувна панель навігації -->
     <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
         <div class="offcanvas-header border-bottom border-secondary">
             <h5 class="offcanvas-title fw-bold text-primary" id="offcanvasNavbarLabel">Навігація</h5>
@@ -119,7 +174,6 @@
             <small>&copy; {% now "Y" %} QuizLab. Усі права захищено.</small>
         </div>
     </footer>
-
 
     <script>
         const themeToggleBtn = document.getElementById('themeToggleBtn');

@@ -25,6 +25,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('quizzes.urls')), 
     path('users/', include('users.urls')),  
+    path('quiz/', include('quiz_play.urls')),
 ]
 
 if settings.DEBUG:

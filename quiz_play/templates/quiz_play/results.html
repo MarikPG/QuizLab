@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center my-5">
+    <div class="col-md-6 text-center">
+        <div class="card shadow p-5">
+            <h1 class="display-4 fw-bold text-success mb-3">Вітаємо!</h1>
+            <p class="fs-4">Гравець: <strong>{{ attempt.real_name }}</strong></p>
+            <p class="fs-5">Тест: {{ attempt.quiz.title }}</p>
+            <hr>
+            <div class="my-4">
+                <span class="display-3 fw-bold text-primary">{{ attempt.score }}</span>
+                <span class="fs-4 text-muted">з {{ attempt.quiz.questions.count }} балів</span>
+            </div>
+            <a href="{% url 'home' %}" class="btn btn-primary py-2 px-4 fs-5">На головну</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
