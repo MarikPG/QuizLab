@@ -58,11 +58,14 @@
                                             Правильна відповідь
                                         </label>
                                     </div>
+                                    
                                     {% if formset.can_delete %}
-                                        <div class="form-check m-0 text-danger small">
+                                        <div class="d-none">
                                             {{ form.DELETE }}
-                                            <label class="form-check-label" for="{{ form.DELETE.id_for_label }}">Видалити</label>
                                         </div>
+                                        <button type="button" class="btn btn-outline-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center delete-answer-btn" style="width: 38px; height: 38px;" title="Видалити">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
                                     {% endif %}
                                 </div>
                             </div>
@@ -85,6 +88,21 @@
         const container = document.getElementById('answers-container');
         const totalFormsInput = document.getElementById('id_form-TOTAL_FORMS');
 
+        container.addEventListener('click', function (e) {
+            const deleteBtn = e.target.closest('.delete-answer-btn');
+            if (deleteBtn) {
+                const answerItem = deleteBtn.closest('.answer-item');
+                const deleteCheckbox = answerItem.querySelector('input[name$="-DELETE"]');
+                
+                if (deleteCheckbox) {
+                    deleteCheckbox.checked = true;
+                    answerItem.style.display = 'none';
+                } else {
+                    answerItem.remove();
+                }
+            }
+        });
+
         if (addButton && container && totalFormsInput) {
             addButton.addEventListener('click', function () {
                 const currentFormCount = parseInt(totalFormsInput.value);
@@ -96,6 +114,7 @@
                 const regex = new RegExp('form-\\d+-', 'g');
                 
                 newCard.innerHTML = newCard.innerHTML.replace(regex, `form-${currentFormCount}-`);
+                newCard.style.display = '';
 
                 const textInput = newCard.querySelector('input[type="text"]');
                 if (textInput) textInput.value = '';
@@ -105,6 +124,9 @@
 
                 const hiddenId = newCard.querySelector('input[type="hidden"]');
                 if (hiddenId) hiddenId.value = '';
+
+                const deleteCheckbox = newCard.querySelector('input[name$="-DELETE"]');
+                if (deleteCheckbox) deleteCheckbox.checked = false;
 
                 const label = newCard.querySelector('.answer-label');
                 if (label) label.textContent = `Варіант відповіді ${currentFormCount + 1}`;

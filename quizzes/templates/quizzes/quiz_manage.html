@@ -27,7 +27,6 @@
     <div class="list-group shadow-sm">
         {% for question in questions %}
             <div class="list-group-item p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <!-- Клікабельний блок із текстом питання -->
                 <a href="{% url 'edit_question' question.id %}" class="text-decoration-none text-body flex-grow-1">
                     <h5 class="fw-bold mb-1 text-primary-hover">
                         Питання #{{ forloop.counter }}: {{ question.text }}
@@ -35,14 +34,31 @@
                     <small class="text-muted">Відповідей: {{ question.answers.count }} (натисніть для редагування)</small>
                 </a>
                 
-                <!-- Блок кнопок-іконок -->
                 <div class="d-flex align-items-center gap-2">
-                    <!-- Кнопка Редагувати (олівчик) -->
+                    {% if not forloop.first %}
+                        <a href="{% url 'move_question_up' question.id %}" class="btn btn-outline-secondary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;" title="Перемістити вгору">
+                            <i class="bi bi-arrow-up"></i>
+                        </a>
+                    {% else %}
+                        <button class="btn btn-outline-secondary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center opacity-50" style="width: 38px; height: 38px;" disabled>
+                            <i class="bi bi-arrow-up"></i>
+                        </button>
+                    {% endif %}
+
+                    {% if not forloop.last %}
+                        <a href="{% url 'move_question_down' question.id %}" class="btn btn-outline-secondary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;" title="Перемістити вниз">
+                            <i class="bi bi-arrow-down"></i>
+                        </a>
+                    {% else %}
+                        <button class="btn btn-outline-secondary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center opacity-50" style="width: 38px; height: 38px;" disabled>
+                            <i class="bi bi-arrow-down"></i>
+                        </button>
+                    {% endif %}
+
                     <a href="{% url 'edit_question' question.id %}" class="btn btn-outline-primary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;" title="Редагувати">
                         <i class="bi bi-pencil-fill"></i>
                     </a>
                     
-                    <!-- Кнопка Видалити (кошик) -->
                     <form method="post" action="{% url 'delete_question' question.id %}" onsubmit="return confirm('Ви впевнені, що хочете видалити це питання?');" class="m-0">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-outline-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;" title="Видалити">

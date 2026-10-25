@@ -73,6 +73,7 @@ def add_question_view(request, quiz_id):
         if q_form.is_valid() and formset.is_valid():
             question = q_form.save(commit=False)
             question.quiz = quiz
+            question.order = quiz.questions.count() + 1
             question.save()
 
             for answer_form in formset:
@@ -175,3 +176,39 @@ def edit_question_view(request, question_id):
         'q_form': q_form,
         'formset': formset
     })
+
+
+@login_required
+def move_question_up(request, question_id):
+    question = get_object_or_404(Question, id=question_id)
+    quiz = question.quiz
+
+    if quiz.author != request.user and not request.user.is_superuser and getattr(request.user, 'role', '') != 'admin':
+        messages.error(request, 'Доступ заборонено.')
+        return redirect('home')
+
+    prev_question = quiz.questions.filter(order__lt=question.order).order_by('-order').first()
+    if prev_question:
+        question.order, prev_question.order = prev_question.order, question.order
+        question.save()
+        prev_question.save()
+
+    return redirect('quiz_manage', quiz_id=quiz.id)
+
+
+@login_required
+def move_question_down(request, question_id):
+    question = get_object_or_404(Question, id=question_id)
+    quiz = question.quiz
+
+    if quiz.author != request.user and not request.user.is_superuser and getattr(request.user, 'role', '') != 'admin':
+        messages.error(request, 'Доступ заборонено.')
+        return redirect('home')
+
+    next_question = quiz.questions.filter(order__gt=question.order).order_by('order').first()
+    if next_question:
+        question.order, next_question.order = next_question.order, question.order
+        question.save()
+        next_question.save()
+
+    return redirect('quiz_manage', quiz_id=quiz.id)

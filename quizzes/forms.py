@@ -19,11 +19,10 @@ class QuizForm(forms.ModelForm):
 class QuestionForm(forms.ModelForm):
     class Meta:
         model = Question
-        fields = ('text', 'media', 'order')
+        fields = ('text', 'media')
         widgets = {
             'text': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Текст питання'}),
             'media': forms.FileInput(attrs={'class': 'form-control'}),
-            'order': forms.NumberInput(attrs={'class': 'form-control'}),
         }
 
 

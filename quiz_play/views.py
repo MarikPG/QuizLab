@@ -31,7 +31,7 @@ def play_quiz(request, quiz_id):
         return redirect('start_quiz', quiz_id=quiz.id)
         
     attempt = get_object_or_404(QuizAttempt, id=attempt_id)
-    questions = list(quiz.questions.all().order_by('id'))
+    questions = list(quiz.questions.all().order_by('order'))
     current_index = request.session.get('current_question_index', 0)
     
     if current_index >= len(questions):
