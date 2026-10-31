@@ -11,6 +11,7 @@ class QuizAttempt(models.Model):
     is_completed = models.BooleanField(default=False)
     started_at = models.DateTimeField(auto_now_add=True)
     finished_at = models.DateTimeField(null=True, blank=True)
+    time_spent = models.PositiveIntegerField(default=0, verbose_name="Витрачено часу (сек)")  # <--- Додали це поле
 
     def __str__(self):
         name = self.real_name or (self.user.username if self.user else "Гість")

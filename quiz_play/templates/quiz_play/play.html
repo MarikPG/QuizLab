@@ -1,23 +1,22 @@
-
 {% extends 'base.html' %}
 
 {% block content %}
 <div class="container my-4">
     <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded bg-secondary bg-opacity-10">
-        <div class="fw-bold fs-5">
+        <div class="fw-bold fs-5 text-body">
             Питання <span class="text-primary">{{ current_number }}</span> з {{ total_questions }}
         </div>
         <div class="fw-bold fs-4 text-primary">
             QuizLab
         </div>
         <div class="fw-bold fs-5 text-warning" id="timer">
-            <i class="bi bi-clock"></i> <span id="timer-count">00:00</span>
+            <i class="bi bi-clock"></i> <span id="timer-count">00:30</span>
         </div>
     </div>
 
-    <div class="card shadow mb-4">
+    <div class="card shadow mb-4 bg-body-tertiary border-0">
         <div class="card-body text-center py-4">
-            <h3 class="card-title fw-bold mb-3">{{ question.text }}</h3>
+            <h3 class="card-title fw-bold mb-3 text-body">{{ question.text }}</h3>
             
             {% if question.media %}
                 <div class="text-center my-3">
@@ -36,34 +35,130 @@
         <div class="row g-3">
             {% for answer in question.answers.all %}
                 <div class="col-md-6">
-                    <label class="card h-100 p-3 shadow-sm answer-card text-start" style="cursor: pointer;">
-                        <div class="d-flex align-items-center gap-3">
-                            <input type="{% if is_multiple %}checkbox{% else %}radio{% endif %}" 
-                                   name="answers" value="{{ answer.id }}" class="form-check-input answer-input fs-5"
-                                   {% if not is_multiple %}onchange="this.form.submit();"{% endif %}>
-                            <span class="fs-5">{{ answer.text }}</span>
+                    <label class="card h-100 p-3 shadow-sm answer-card text-start bg-body-tertiary text-body border-2" 
+                           style="cursor: pointer; transition: all 0.25s ease;"
+                           data-correct="{% if answer.is_correct %}true{% else %}false{% endif %}">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-3">
+                                <input type="{% if is_multiple %}checkbox{% else %}radio{% endif %}" 
+                                       name="answers" value="{{ answer.id }}" class="form-check-input answer-input fs-5">
+                                <span class="fs-5">{{ answer.text }}</span>
+                            </div>
+                            <span class="icon-container fs-4"></span>
                         </div>
                     </label>
                 </div>
             {% endfor %}
         </div>
 
-        {% if is_multiple %}
-            <div class="text-center mt-4">
+        <div class="text-center mt-4" id="action-container">
+            {% if is_multiple %}
                 <button type="submit" class="btn btn-primary px-5 py-2 fs-5">Відповісти</button>
-            </div>
-        {% endif %}
+            {% endif %}
+        </div>
     </form>
 </div>
 
+<style>
+    .answer-card.correct {
+        border-color: #198754 !important;
+        background-color: rgba(25, 135, 84, 0.15) !important;
+    }
+    .answer-card.incorrect {
+        border-color: #fd7e14 !important;
+        background-color: rgba(253, 126, 20, 0.15) !important;
+    }
+    .answer-card.reveal-correct {
+        border-color: #198754 !important;
+        border-style: dashed !important;
+        background-color: rgba(25, 135, 84, 0.08) !important;
+    }
+</style>
+
 <script>
-    let seconds = 0;
+    let timeLeft = 30;
     const timerElement = document.getElementById('timer-count');
-    setInterval(() => {
-        seconds++;
-        const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
-        const secs = String(seconds % 60).padStart(2, '0');
+    const form = document.getElementById('quiz-form');
+    const isMultiple = ("{{ is_multiple|safe }}" === "True");
+    let isAnswered = false;
+
+    const timerInterval = setInterval(() => {
+        if (isAnswered) return;
+        timeLeft--;
+        const mins = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+        const secs = String(timeLeft % 60).padStart(2, '0');
         timerElement.textContent = `${mins}:${secs}`;
+        
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            if (!isMultiple) {
+                document.querySelectorAll('.answer-card').forEach(card => {
+                    if (card.getAttribute('data-correct') === 'true') {
+                        card.classList.add('correct');
+                        card.querySelector('.icon-container').innerHTML = '<i class="bi bi-check-lg text-success"></i>';
+                    }
+                });
+                setTimeout(() => form.submit(), 2000);
+            } else {
+                form.submit();
+            }
+        }
     }, 1000);
+
+    const cards = document.querySelectorAll('.answer-card');
+    cards.forEach(card => {
+        const input = card.querySelector('input');
+        const iconContainer = card.querySelector('.icon-container');
+
+        card.addEventListener('click', (e) => {
+            if (isAnswered) return;
+            
+            if (isMultiple) {
+                if (e.target !== input) {
+                    input.checked = !input.checked;
+                }
+                if (input.checked) {
+                    card.classList.add('correct');
+                    iconContainer.innerHTML = '<i class="bi bi-check-lg text-success"></i>';
+                } else {
+                    card.classList.remove('correct');
+                    iconContainer.innerHTML = '';
+                }
+            } else {
+                isAnswered = true;
+                clearInterval(timerInterval);
+                input.checked = true;
+
+                const isCorrect = card.getAttribute('data-correct') === 'true';
+
+                if (isCorrect) {
+                    card.classList.add('correct');
+                    iconContainer.innerHTML = '<i class="bi bi-check-lg text-success"></i>';
+                    setTimeout(() => {
+                        form.submit();
+                    }, 2000);
+                } else {
+                    card.classList.add('incorrect');
+                    iconContainer.innerHTML = '<i class="bi bi-x-lg" style="color: #fd7e14 !important;"></i>';
+
+                    cards.forEach(c => {
+                        if (c.getAttribute('data-correct') === 'true') {
+                            c.classList.add('reveal-correct');
+                            c.querySelector('.icon-container').innerHTML = '<i class="bi bi-check-lg text-success"></i>';
+                        }
+                    });
+
+                    const actionContainer = document.getElementById('action-container');
+                    actionContainer.innerHTML = `
+                        <button type="submit" class="btn btn-success px-5 py-2 fs-5 fw-bold shadow">Продовжити</button>
+                    `;
+                }
+            }
+        });
+
+        input.addEventListener('change', (e) => {
+            e.stopPropagation();
+        });
+    });
 </script>
 {% endblock %}

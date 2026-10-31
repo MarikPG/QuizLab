@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Лідерборд: {{ quiz.title }} | QuizLab{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1 text-body">Таблиця лідерів</h2>
+                <p class="text-muted mb-0">Квіз: <strong class="text-body">{{ quiz.title }}</strong></p>
+            </div>
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary">На головну</a>
+        </div>
+
+        <div class="card shadow border-0 rounded-4 p-4 bg-body-tertiary">
+            {% if leaderboard %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 text-body">
+                        <thead>
+                            <tr class="text-muted border-bottom border-secondary">
+                                <th scope="col" class="text-center" style="width: 70px;">#</th>
+                                <th scope="col">Гравець</th>
+                                <th scope="col" class="text-center">Бали</th>
+                                <th scope="col" class="text-center">Час</th>
+                                <th scope="col" class="text-end">Дата</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for attempt in leaderboard %}
+                                <tr>
+                                    <th scope="row" class="text-center text-muted">
+                                        {% if forloop.counter == 1 %}
+                                            <span class="badge bg-warning text-dark rounded-circle p-2" title="1 місце">🥇 1</span>
+                                        {% elif forloop.counter == 2 %}
+                                            <span class="badge bg-secondary rounded-circle p-2" title="2 місце">🥈 2</span>
+                                        {% elif forloop.counter == 3 %}
+                                            <span class="badge bg-danger rounded-circle p-2" title="3 місце">🥉 3</span>
+                                        {% else %}
+                                            <span class="fw-normal text-muted">{{ forloop.counter }}</span>
+                                        {% endif %}
+                                    </th>
+                                    <td class="fw-bold text-body">
+                                        {{ attempt.real_name|default:"Гість" }}
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success bg-opacity-25 text-success fw-bold fs-6 px-3 py-2">
+                                            {{ attempt.score }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center text-muted">
+                                        {% if attempt.time_spent %}
+                                            {{ attempt.time_spent }} сек
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end text-muted small">
+                                        {{ attempt.finished_at|date:"d.m.Y H:i" }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-trophy text-muted fs-1 mb-3 d-block"></i>
+                    <h5 class="text-body mb-2">Поки немає жодного результату</h5>
+                    <p class="text-muted small mb-0">Станьте першим, хто пройде цей квіз!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

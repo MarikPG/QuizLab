@@ -37,6 +37,11 @@ def play_quiz(request, quiz_id):
     if current_index >= len(questions):
         attempt.is_completed = True
         attempt.finished_at = timezone.now()
+        
+        if attempt.started_at:
+            delta = attempt.finished_at - attempt.started_at
+            attempt.time_spent = int(delta.total_seconds())
+            
         attempt.save()
         return redirect('quiz_results', attempt_id=attempt.id)
         
@@ -76,4 +81,15 @@ def play_quiz(request, quiz_id):
 
 def quiz_results(request, attempt_id):
     attempt = get_object_or_404(QuizAttempt, id=attempt_id)
-    return render(request, 'quiz_play/results.html', {'attempt': attempt})
+    quiz = attempt.quiz
+
+    leaderboard = QuizAttempt.objects.filter(
+        quiz=quiz, 
+        is_completed=True
+    ).order_by('-score', 'time_spent')[:10]
+
+    context = {
+        'attempt': attempt,
+        'leaderboard': leaderboard,
+    }
+    return render(request, 'quiz_play/results.html', context)

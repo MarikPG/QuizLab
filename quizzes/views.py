@@ -212,3 +212,19 @@ def move_question_down(request, question_id):
         next_question.save()
 
     return redirect('quiz_manage', quiz_id=quiz.id)
+
+
+@login_required
+def quiz_delete_view(request, quiz_id):
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+
+    if quiz.author != request.user and not request.user.is_superuser and getattr(request.user, 'role', '') != 'admin':
+        messages.error(request, 'У вас немає прав для видалення цього квізу.')
+        return redirect('home')
+
+    if request.method == 'POST':
+        quiz.delete()
+        messages.success(request, 'Квіз та всі повʼязані дані успішно видалено.')
+        return redirect('my_quizzes')
+
+    return render(request, 'quizzes/quiz_confirm_delete.html', {'quiz': quiz})

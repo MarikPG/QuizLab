@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Видалення квізу | QuizLab{% endblock %}
+
+{% block content %}
+<div class="container my-5" style="max-width: 600px;">
+    <div class="card shadow border-0 rounded-4 p-4 bg-body-tertiary">
+        <h3 class="fw-bold text-danger mb-3">Видалення квізу</h3>
+        <p class="text-body mb-4">
+            Ви впевнені, що хочете видалити квіз <strong class="text-primary">"{{ quiz.title }}"</strong>? 
+            Цю дію неможливо скасувати. Усі питання, варіанти відповідей та історія проходжень будуть видалені з бази даних.
+        </p>
+
+        <form method="post" class="d-flex gap-3">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger px-4 py-2 fw-bold">Так, видалити</button>
+            <a href="{% url 'quiz_manage' quiz.id %}" class="btn btn-outline-secondary px-4 py-2">Скасувати</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
