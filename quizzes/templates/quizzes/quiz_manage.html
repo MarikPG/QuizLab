@@ -7,6 +7,12 @@
     <div>
         <h2 class="fw-bold m-0">{{ quiz.title }}</h2>
         <p class="text-muted mb-0">Код доступу: <span class="badge bg-secondary">{{ quiz.code }}</span></p>
+        <p class="small text-muted mb-0">
+            Автор:
+            <a href="{% url 'public_profile' quiz.author.id %}" class="fw-semibold text-decoration-none">
+                {{ quiz.author.username }}
+            </a>
+        </p>
     </div>
     <div class="d-flex gap-2">
         <a href="{% url 'quiz_edit' quiz.id %}" class="btn btn-outline-primary">Редагувати квіз</a>

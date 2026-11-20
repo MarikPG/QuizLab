@@ -1,9 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import CustomUserCreationForm, ProfileUpdateForm
+from .models import User
 
 
 def register_view(request):
@@ -59,3 +60,12 @@ def profile_view(request):
     else:
         form = ProfileUpdateForm(instance=request.user)
     return render(request, 'users/profile.html', {'form': form})
+
+
+def public_profile_view(request, user_id):
+    profile_user = get_object_or_404(User, id=user_id)
+    quizzes = profile_user.quizzes.filter(is_public=True).order_by('-created_at')
+    return render(request, 'users/public_profile.html', {
+        'profile_user': profile_user,
+        'quizzes': quizzes,
+    })

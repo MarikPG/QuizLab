@@ -6,6 +6,12 @@
         <div class="card shadow p-4 text-center">
             <h2 class="fw-bold mb-3">{{ quiz.title }}</h2>
             <p class="text-muted">{{ quiz.description }}</p>
+            <p class="small text-muted">
+                Автор:
+                <a href="{% url 'public_profile' quiz.author.id %}" class="fw-semibold text-decoration-none">
+                    {{ quiz.author.username }}
+                </a>
+            </p>
             
             <form method="post" class="mt-4 text-start">
                 {% csrf_token %}

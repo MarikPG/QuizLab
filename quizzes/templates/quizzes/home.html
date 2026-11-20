@@ -54,6 +54,12 @@
                         <p class="card-text text-muted flex-grow-1">
                             {{ quiz.description|truncatewords:15|default:"Опис відсутній" }}
                         </p>
+                        <small class="text-muted mb-3">
+                            Автор:
+                            <a href="{% url 'public_profile' quiz.author.id %}" class="fw-semibold text-decoration-none">
+                                {{ quiz.author.username }}
+                            </a>
+                        </small>
                         
                         <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
                             <span class="badge bg-secondary">Питань: {{ quiz.questions.count }}</span>
