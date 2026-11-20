@@ -1,104 +1,31 @@
 {% extends 'base.html' %}
+{% block title %}Результат | QuizLab{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center my-4">
-    <div class="col-md-8 text-center mb-5">
-        <div class="card shadow border-0 p-5 rounded-4 bg-body-tertiary">
-            <h1 class="display-4 fw-bold text-success mb-3">Вітаємо!</h1>
-            <p class="fs-4">Гравець: <strong class="text-body">{{ attempt.real_name }}</strong></p>
-            <p class="fs-5 text-muted">Тест: {{ attempt.quiz.title }}</p>
-            <hr class="my-4 border-secondary opacity-25">
-            
-            <div class="row text-center mb-4 g-3">
-                <div class="col-sm-6">
-                    <div class="p-3 bg-body rounded-3 border border-secondary border-opacity-10 shadow-sm">
-                        <span class="d-block text-muted small text-uppercase fw-bold">Набрано балів</span>
-                        <span class="fs-2 fw-bold text-primary">{{ attempt.score }}</span>
-                        <span class="fs-5 text-muted">/ {{ attempt.quiz.questions.count }}</span>
-                    </div>
-                </div>
-                <div class="col-sm-6">
-                    <div class="p-3 bg-body rounded-3 border border-secondary border-opacity-10 shadow-sm">
-                        <span class="d-block text-muted small text-uppercase fw-bold">Витрачено часу</span>
-                        <span class="fs-2 fw-bold text-body">
-                            {% if attempt.time_spent %}
-                                {{ attempt.time_spent }} <span class="fs-5 fw-normal text-muted">сек</span>
-                            {% else %}
-                                —
-                            {% endif %}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-center gap-3">
-                <a href="{% url 'home' %}" class="btn btn-outline-secondary py-2 px-4">На головну</a>
-                <a href="{% url 'quiz_leaderboard' attempt.quiz.id %}" class="btn btn-primary py-2 px-4 fw-bold">
-                    <i class="bi bi-trophy-fill me-1"></i> Повний лідерборд
-                </a>
-            </div>
-        </div>
+<div class="qb container my-4" style="max-width: 760px;">
+    <div class="text-center mb-4">
+        <div class="ring" data-p="{{ percent }}"><b>{{ percent }}%</b></div>
+        <h2 class="fw-bold mt-3 mb-1">{% if percent >= 80 %}Чудовий результат!{% elif percent >= 50 %}Непогано!{% else %}Спробуйте ще раз{% endif %}</h2>
+        <p class="muted mb-0">{{ attempt.real_name }}, {{ attempt.quiz.title }}</p>
     </div>
 
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-md-3"><div class="box"><small>Правильних</small><b>{{ attempt.score }}/{{ total }}</b></div></div>
+        <div class="col-6 col-md-3"><div class="box"><small>Місце</small><b>{{ place }} з {{ players }}</b></div></div>
+        <div class="col-6 col-md-3"><div class="box"><small>Час</small><b>{{ attempt.time_spent }} с</b></div></div>
+        <div class="col-6 col-md-3"><div class="box"><small>Середній бал</small><b>{{ avg_score }}</b></div></div>
+    </div>
 
-    <div class="col-md-10">
-        <div class="card shadow border-0 rounded-4 p-4 bg-body-tertiary">
-            <h3 class="fw-bold mb-4 text-center text-body">
-                <i class="bi bi-award text-warning"></i> Таблиця лідерів квізу
-            </h3>
+    <div class="dots text-center mb-4" aria-label="Відповіді по питаннях">
+        {% for a in answers %}<span class="{% if not a.is_correct %}no{% endif %}" title="Питання {{ forloop.counter }}"></span>{% endfor %}
+    </div>
 
-            {% if leaderboard %}
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0 text-body">
-                        <thead>
-                            <tr class="text-muted border-bottom border-secondary">
-                                <th scope="col" class="text-center" style="width: 70px;">#</th>
-                                <th scope="col">Гравець</th>
-                                <th scope="col" class="text-center">Бали</th>
-                                <th scope="col" class="text-center">Час</th>
-                                <th scope="col" class="text-end">Дата</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in leaderboard %}
-                                <tr {% if item.id == attempt.id %}class="fw-bold" style="background-color: rgba(25, 135, 84, 0.22);"{% endif %}>
-                                    <th scope="row" class="text-center {% if item.id == attempt.id %}text-body{% else %}text-muted{% endif %}">
-                                        {% if forloop.counter == 1 %}
-                                            <span class="badge bg-warning text-dark rounded-circle p-2">🥇 1</span>
-                                        {% elif forloop.counter == 2 %}
-                                            <span class="badge bg-secondary rounded-circle p-2">🥈 2</span>
-                                        {% elif forloop.counter == 3 %}
-                                            <span class="badge bg-danger rounded-circle p-2">🥉 3</span>
-                                        {% else %}
-                                            {{ forloop.counter }}
-                                        {% endif %}
-                                    </th>
-                                    <td class="text-body">
-                                        {{ item.real_name|default:"Гість" }}
-                                        {% if item.id == attempt.id %}
-                                            <span class="badge bg-success ms-2 font-monospace text-white">Це ви</span>
-                                        {% endif %}
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-success bg-opacity-25 text-success fw-bold px-3 py-2">
-                                            {{ item.score }}
-                                        </span>
-                                    </td>
-                                    <td class="text-center {% if item.id == attempt.id %}text-body{% else %}text-muted{% endif %}">
-                                        {% if item.time_spent %}{{ item.time_spent }} сек{% else %}—{% endif %}
-                                    </td>
-                                    <td class="text-end {% if item.id == attempt.id %}text-body{% else %}text-muted{% endif %} small">
-                                        {{ item.finished_at|date:"d.m.Y H:i" }}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <p class="text-center text-muted mb-0">Ви поки єдиний, хто пройшов цей квіз!</p>
-            {% endif %}
-        </div>
+    <h4 class="fw-bold mb-3">Таблиця лідерів</h4>
+    {% include 'quiz_play/_leaderboard.html' %}
+
+    <div class="d-flex justify-content-center gap-3 mt-4">
+        <a href="{% url 'home' %}" class="btn btn-outline-light">На головну</a>
+        <a href="{% url 'quiz_leaderboard' attempt.quiz.id %}" class="btn btn-primary fw-bold">Повний лідерборд</a>
     </div>
 </div>
 {% endblock %}

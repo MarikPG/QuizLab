@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="uk" data-bs-theme="light">
 <head>
@@ -47,7 +48,7 @@
             border-color: #0a58ca;
         }
 
-        /* Контурні сині кнопки (btn-outline-secondary перетворюємо на виразні сині) */
+        /* Контурні сині кнопки */
         [data-bs-theme="dark"] .btn-outline-secondary {
             color: #3d8bfd;
             border-color: #3d8bfd;
@@ -66,14 +67,25 @@
             background-color: #0d6efd;
             color: #ffffff;
         }
+
+        .navbar-logo {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+            transition: transform 0.2s ease;
+        }
+
+        .navbar-brand:hover .navbar-logo {
+            transform: scale(1.03);
+        }
     </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
 
     <nav class="navbar navbar-dark bg-dark mb-4 shadow-sm">
         <div class="container d-flex justify-content-between align-items-center">
-            <a class="navbar-brand fw-bold text-primary fs-4" href="{% url 'home' %}">
-                QuizLab
+            <a class="navbar-brand d-flex align-items-center py-1" href="{% url 'home' %}">
+                <img src="{% static 'images/quizlab-logo.png' %}" alt="QuizLab" class="navbar-logo">
             </a>
 
             <div class="d-flex align-items-center gap-3">

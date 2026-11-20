@@ -1,164 +1,457 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container my-4">
-    <div class="d-flex justify-content-between align-items-center mb-4 p-3 rounded bg-secondary bg-opacity-10">
-        <div class="fw-bold fs-5 text-body">
-            Питання <span class="text-primary">{{ current_number }}</span> з {{ total_questions }}
+<div class="quiz-wrap container my-4">
+
+    <!-- Шапка -->
+    <div class="quiz-header">
+        <div class="quiz-counter">
+            Питання <span class="quiz-accent">{{ current_number }}</span> з {{ total_questions }}
         </div>
-        <div class="fw-bold fs-4 text-primary">
-            QuizLab
-        </div>
-        <div class="fw-bold fs-5 text-warning" id="timer">
-            <i class="bi bi-clock"></i> <span id="timer-count">00:30</span>
+        <div class="quiz-brand">QuizLab</div>
+        <div class="quiz-timer" id="timer" aria-live="off">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
+            <span id="timer-count">{{ time_limit_label|default:"00:30" }}</span>
         </div>
     </div>
+    <div class="quiz-progress" aria-hidden="true"><div class="quiz-progress-bar" id="progress-bar"></div></div>
 
-    <div class="card shadow mb-4 bg-body-tertiary border-0">
-        <div class="card-body text-center py-4">
-            <h3 class="card-title fw-bold mb-3 text-body">{{ question.text }}</h3>
-            
-            {% if question.media %}
-                <div class="text-center my-3">
-                    <img src="{{ question.media.url }}" alt="Зображення до питання" class="img-fluid rounded shadow-sm" style="max-height: 350px;">
-                </div>
-            {% endif %}
+    <!-- Питання -->
+    <div class="quiz-question">
+        <h3>{{ question.text }}</h3>
 
-            {% if is_multiple %}
-                <p class="text-info small mb-0"><i class="bi bi-info-circle"></i> Оберіть кілька варіантів відповіді та натисніть підтвердити</p>
-            {% endif %}
-        </div>
+        {% if question.media %}
+            <div class="text-center mt-3">
+                <img src="{{ question.media.url }}" alt="Зображення до питання" class="img-fluid rounded" style="max-height: 350px;">
+            </div>
+        {% endif %}
+
+        {% if is_multiple %}
+            <p class="quiz-hint">Оберіть кілька варіантів і натисніть «Відповісти»</p>
+        {% endif %}
     </div>
 
-    <form method="post" id="quiz-form">
+    <!-- Відповіді -->
+    <form method="post" id="quiz-form"
+          data-multiple="{% if is_multiple %}true{% else %}false{% endif %}"
+          data-time-limit="{{ time_limit|default:30 }}">
         {% csrf_token %}
-        <div class="row g-3">
+        <input type="hidden" name="question_id" value="{{ question.id }}">
+        <div class="row g-3" id="answers-container">
             {% for answer in question.answers.all %}
-                <div class="col-md-6">
-                    <label class="card h-100 p-3 shadow-sm answer-card text-start bg-body-tertiary text-body border-2" 
-                           style="cursor: pointer; transition: all 0.25s ease;"
-                           data-correct="{% if answer.is_correct %}true{% else %}false{% endif %}">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center gap-3">
-                                <input type="{% if is_multiple %}checkbox{% else %}radio{% endif %}" 
-                                       name="answers" value="{{ answer.id }}" class="form-check-input answer-input fs-5">
-                                <span class="fs-5">{{ answer.text }}</span>
-                            </div>
-                            <span class="icon-container fs-4"></span>
-                        </div>
-                    </label>
+                <div class="col-12 col-md-6">
+                    <div class="answer-card"
+                         role="{% if is_multiple %}checkbox{% else %}radio{% endif %}"
+                         aria-checked="false"
+                         tabindex="0"
+                         data-answer-id="{{ answer.id }}"
+                         data-correct="{% if answer.is_correct %}true{% else %}false{% endif %}">
+                        <input type="{% if is_multiple %}checkbox{% else %}radio{% endif %}"
+                               name="answers" value="{{ answer.id }}" class="answer-input" tabindex="-1" hidden>
+                        <span class="answer-marker">{{ forloop.counter }}</span>
+                        <span class="answer-text">{{ answer.text }}</span>
+                    </div>
                 </div>
             {% endfor %}
         </div>
 
-        <div class="text-center mt-4" id="action-container">
+        <div class="quiz-actions" id="action-container">
             {% if is_multiple %}
-                <button type="submit" class="btn btn-primary px-5 py-2 fs-5">Відповісти</button>
+                <button type="submit" class="quiz-btn" id="submit-btn">Відповісти</button>
             {% endif %}
         </div>
     </form>
 </div>
 
 <style>
-    .answer-card.correct {
-        border-color: #198754 !important;
-        background-color: rgba(25, 135, 84, 0.15) !important;
+    .quiz-wrap {
+        --bg: #232c4a;
+        --panel: #2d3857;
+        --panel-2: #36426580;
+        --line: #3f4b72;
+        --text: #eef1fb;
+        --muted: #8f9bc0;
+        --ok: #4be3b0;
+        --bad: #ff9a4a;
+        --bad-line: #d9631a;
+        --accent: #7c8cff;
+
+        max-width: 860px;
+        padding: 20px;
+        border-radius: 20px;
+        background: var(--bg);
+        color: var(--text);
     }
-    .answer-card.incorrect {
-        border-color: #fd7e14 !important;
-        background-color: rgba(253, 126, 20, 0.15) !important;
+
+    /* ---------- Шапка ---------- */
+    .quiz-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 6px 4px 14px;
+        font-weight: 700;
     }
-    .answer-card.reveal-correct {
-        border-color: #198754 !important;
-        border-style: dashed !important;
-        background-color: rgba(25, 135, 84, 0.08) !important;
+    .quiz-brand { font-size: 1.4rem; letter-spacing: .02em; }
+    .quiz-accent { color: var(--accent); }
+    .quiz-timer {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 86px;
+        justify-content: flex-end;
+        font-variant-numeric: tabular-nums;
+        color: #ffd166;
+        transition: color .3s;
+    }
+    .quiz-timer.warn { color: var(--bad); animation: timer-pulse 1s ease-in-out infinite; }
+
+    .quiz-progress { height: 5px; border-radius: 99px; background: var(--line); overflow: hidden; margin-bottom: 20px; }
+    .quiz-progress-bar { height: 100%; width: 100%; background: var(--accent); transform-origin: left; transition: transform 1s linear, background .3s; }
+    .quiz-progress-bar.warn { background: var(--bad); }
+
+    /* ---------- Питання ---------- */
+    .quiz-question {
+        background: var(--panel);
+        border-radius: 16px;
+        padding: 28px 22px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .quiz-question h3 { margin: 0; font-weight: 700; color: var(--text); }
+    .quiz-hint { margin: 12px 0 0; font-size: .9rem; color: var(--muted); }
+
+    /* ---------- Відповіді ---------- */
+    .answer-card {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        height: 100%;
+        min-height: 76px;
+        padding: 16px 20px;
+        background: var(--panel);
+        border: 2px solid var(--line);
+        border-radius: 14px;
+        color: var(--text);
+        cursor: pointer;
+        user-select: none;
+        transition: border-color .2s, background-color .2s, opacity .3s, transform .15s, box-shadow .3s;
+    }
+    .answer-card:hover { border-color: var(--accent); }
+    .answer-card:active { transform: scale(.985); }
+    .answer-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+    .answer-card.selected { border-color: var(--accent); background: #34406a; }
+
+    .answer-marker {
+        flex: 0 0 28px;
+        width: 28px;
+        height: 28px;
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        color: var(--muted);
+    }
+    .answer-text { font-size: 1.15rem; line-height: 1.3; }
+
+    .answer-marker svg { width: 28px; height: 28px; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+    .answer-marker svg path { stroke-dasharray: 30; stroke-dashoffset: 30; animation: draw .35s .12s ease-out forwards; }
+
+    /* Стани після відповіді */
+    .answers-locked .answer-card { cursor: default; }
+    .answers-locked .answer-card:hover { border-color: var(--line); }
+    .answers-locked .answer-card:active { transform: none; }
+
+    .answer-card.dim { opacity: .45; }
+
+    /* Правильна (обрана) */
+    .answer-card.correct,
+    .answers-locked .answer-card.correct:hover {
+        border-color: var(--ok);
+        background: rgba(75, 227, 176, .10);
+        animation: pop .45s ease-out, glow-ok 1.2s ease-out;
+    }
+    .answer-card.correct .answer-marker svg { stroke: var(--ok); }
+
+    /* Неправильна (обрана) */
+    .answer-card.incorrect,
+    .answers-locked .answer-card.incorrect:hover {
+        border-color: var(--bad-line);
+        background: rgba(255, 154, 74, .08);
+        animation: shake .45s ease-in-out;
+    }
+    .answer-card.incorrect .answer-marker svg { stroke: var(--bad); }
+
+    /* Правильна, яку пропустили */
+    .answer-card.missed,
+    .answers-locked .answer-card.missed:hover {
+        border-color: var(--ok);
+        border-style: dashed;
+        background: rgba(75, 227, 176, .05);
+        animation: fade-in-border .4s ease-out;
+    }
+    .answer-card.missed .answer-marker svg { stroke: var(--ok); }
+
+    /* ---------- Кнопки / повідомлення ---------- */
+    .quiz-actions { margin-top: 22px; text-align: center; min-height: 48px; }
+    .quiz-note {
+        display: inline-block;
+        margin-bottom: 14px;
+        padding: 9px 16px;
+        border-radius: 10px;
+        background: var(--panel);
+        color: var(--text);
+        animation: slide-in .3s ease-out;
+    }
+    .quiz-btn {
+        display: block;
+        margin: 0 auto;
+        padding: 11px 44px;
+        border: 0;
+        border-radius: 12px;
+        background: var(--accent);
+        color: #10152b;
+        font-size: 1.15rem;
+        font-weight: 700;
+        transition: transform .15s, filter .2s;
+    }
+    .quiz-btn:hover { filter: brightness(1.1); }
+    .quiz-btn:active { transform: scale(.97); }
+    .quiz-btn:disabled { opacity: .5; cursor: default; }
+    .quiz-btn.ok { background: var(--ok); }
+
+    /* ---------- Анімації ---------- */
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+    @keyframes pop {
+        0%   { transform: scale(1); }
+        40%  { transform: scale(1.035); }
+        100% { transform: scale(1); }
+    }
+    @keyframes glow-ok {
+        0%   { box-shadow: 0 0 0 0 rgba(75, 227, 176, .55); }
+        100% { box-shadow: 0 0 0 16px rgba(75, 227, 176, 0); }
+    }
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20% { transform: translateX(-9px); }
+        40% { transform: translateX(8px); }
+        60% { transform: translateX(-5px); }
+        80% { transform: translateX(3px); }
+    }
+    @keyframes fade-in-border { from { background-color: transparent; } }
+    @keyframes slide-in { from { opacity: 0; transform: translateY(-6px); } }
+    @keyframes timer-pulse { 50% { transform: scale(1.08); } }
+
+    @media (prefers-reduced-motion: reduce) {
+        .answer-card, .answer-card *, .quiz-timer, .quiz-note, .quiz-progress-bar {
+            animation: none !important;
+            transition: none !important;
+        }
+        .answer-marker svg path { stroke-dashoffset: 0; }
+    }
+
+    @media (max-width: 576px) {
+        .quiz-wrap { padding: 12px; border-radius: 14px; }
+        .quiz-brand { font-size: 1.1rem; }
+        .answer-text { font-size: 1.05rem; }
     }
 </style>
 
 <script>
-    let timeLeft = 30;
-    const timerElement = document.getElementById('timer-count');
+(() => {
     const form = document.getElementById('quiz-form');
-    const isMultiple = ("{{ is_multiple|safe }}" === "True");
-    let isAnswered = false;
+    const TOTAL_TIME = parseInt(form.dataset.timeLimit, 10) || 30;
+    const isMultiple = form.dataset.multiple === 'true';
+
+    const container = document.getElementById('answers-container');
+    const actionBox = document.getElementById('action-container');
+    const timerBox = document.getElementById('timer');
+    const timerText = document.getElementById('timer-count');
+    const progressBar = document.getElementById('progress-bar');
+    const cards = Array.from(document.querySelectorAll('.answer-card'));
+
+    let timeLeft = TOTAL_TIME;
+    let locked = false;      // відповідь вже зафіксована, клікати більше не можна
+    let submitted = false;   // форма вже відправлена (захист від подвійної відправки)
+
+    const ICONS = {
+        check: '<svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>',
+        cross: '<svg viewBox="0 0 24 24"><path d="M5 5l14 14"/><path d="M19 5L5 19"/></svg>'
+    };
+
+    function setIcon(card, type) {
+        card.querySelector('.answer-marker').innerHTML = ICONS[type];
+    }
+
+    function resetIcon(card) {
+        const idx = cards.indexOf(card) + 1;
+        card.querySelector('.answer-marker').textContent = idx;
+    }
+
+    function submitOnce(delay = 0) {
+        if (submitted) return;
+        submitted = true;
+        setTimeout(() => form.submit(), delay);
+    }
+
+    function lock() {
+        locked = true;
+        container.classList.add('answers-locked');
+    }
+
+    function showNote(text) {
+        const note = document.createElement('div');
+        note.className = 'quiz-note';
+        note.textContent = text;
+        actionBox.prepend(note);
+    }
+
+    /* ---------- Таймер ---------- */
+    function renderTimer() {
+        const m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+        const s = String(timeLeft % 60).padStart(2, '0');
+        timerText.textContent = `${m}:${s}`;
+        progressBar.style.transform = `scaleX(${timeLeft / TOTAL_TIME})`;
+        const warn = timeLeft <= 10;
+        timerBox.classList.toggle('warn', warn);
+        progressBar.classList.toggle('warn', warn);
+    }
 
     const timerInterval = setInterval(() => {
-        if (isAnswered) return;
-        timeLeft--;
-        const mins = String(Math.floor(timeLeft / 60)).padStart(2, '0');
-        const secs = String(timeLeft % 60).padStart(2, '0');
-        timerElement.textContent = `${mins}:${secs}`;
-        
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            if (!isMultiple) {
-                document.querySelectorAll('.answer-card').forEach(card => {
-                    if (card.getAttribute('data-correct') === 'true') {
-                        card.classList.add('correct');
-                        card.querySelector('.icon-container').innerHTML = '<i class="bi bi-check-lg text-success"></i>';
-                    }
-                });
-                setTimeout(() => form.submit(), 2000);
-            } else {
-                form.submit();
-            }
-        }
+        if (locked) return;
+        timeLeft = Math.max(0, timeLeft - 1);
+        renderTimer();
+        if (timeLeft === 0) handleTimeout();
     }, 1000);
+    renderTimer();
 
-    const cards = document.querySelectorAll('.answer-card');
-    cards.forEach(card => {
-        const input = card.querySelector('input');
-        const iconContainer = card.querySelector('.icon-container');
+    function stopTimer() {
+        clearInterval(timerInterval);
+        timerBox.classList.remove('warn');
+    }
 
-        card.addEventListener('click', (e) => {
-            if (isAnswered) return;
-            
-            if (isMultiple) {
-                if (e.target !== input) {
-                    input.checked = !input.checked;
-                }
-                if (input.checked) {
-                    card.classList.add('correct');
-                    iconContainer.innerHTML = '<i class="bi bi-check-lg text-success"></i>';
-                } else {
-                    card.classList.remove('correct');
-                    iconContainer.innerHTML = '';
-                }
-            } else {
-                isAnswered = true;
-                clearInterval(timerInterval);
-                input.checked = true;
+    function handleTimeout() {
+        stopTimer();
+        lock();
+        showNote('Час вийшов');
+        if (isMultiple) {
+            revealMultiple();
+        } else {
+            cards.forEach(c => {
+                if (c.dataset.correct === 'true') markMissed(c);
+                else c.classList.add('dim');
+            });
+        }
+        submitOnce(1800);
+    }
 
-                const isCorrect = card.getAttribute('data-correct') === 'true';
+    /* ---------- Розмітка станів ---------- */
+    function markCorrect(card) {
+        card.classList.remove('selected', 'dim');
+        card.classList.add('correct');
+        card.setAttribute('aria-checked', 'true');
+        setIcon(card, 'check');
+    }
+    function markIncorrect(card) {
+        card.classList.remove('selected', 'dim');
+        card.classList.add('incorrect');
+        setIcon(card, 'cross');
+    }
+    function markMissed(card) {
+        card.classList.remove('selected', 'dim');
+        card.classList.add('missed');
+        setIcon(card, 'check');
+    }
 
-                if (isCorrect) {
-                    card.classList.add('correct');
-                    iconContainer.innerHTML = '<i class="bi bi-check-lg text-success"></i>';
-                    setTimeout(() => {
-                        form.submit();
-                    }, 2000);
-                } else {
-                    card.classList.add('incorrect');
-                    iconContainer.innerHTML = '<i class="bi bi-x-lg" style="color: #fd7e14 !important;"></i>';
+    /* ---------- Одна правильна відповідь ---------- */
+    function chooseSingle(card) {
+        if (locked) return;
+        lock();
+        stopTimer();
 
-                    cards.forEach(c => {
-                        if (c.getAttribute('data-correct') === 'true') {
-                            c.classList.add('reveal-correct');
-                            c.querySelector('.icon-container').innerHTML = '<i class="bi bi-check-lg text-success"></i>';
-                        }
-                    });
+        card.querySelector('input').checked = true;
+        const isCorrect = card.dataset.correct === 'true';
 
-                    const actionContainer = document.getElementById('action-container');
-                    actionContainer.innerHTML = `
-                        <button type="submit" class="btn btn-success px-5 py-2 fs-5 fw-bold shadow">Продовжити</button>
-                    `;
-                }
-            }
+        if (isCorrect) {
+            markCorrect(card);
+            cards.forEach(c => { if (c !== card) c.classList.add('dim'); });
+            submitOnce(1000);
+            return;
+        }
+
+        markIncorrect(card);
+        cards.forEach(c => {
+            if (c === card) return;
+            if (c.dataset.correct === 'true') markMissed(c);
+            else c.classList.add('dim');
         });
 
-        input.addEventListener('change', (e) => {
-            e.stopPropagation();
+        actionBox.innerHTML = '';
+        showNote('Неправильно. Натисніть будь-де, щоб продовжити.');
+        const btn = document.createElement('button');
+        btn.type = 'submit';
+        btn.className = 'quiz-btn ok';
+        btn.textContent = 'Продовжити';
+        actionBox.appendChild(btn);
+
+        // Слухач вішаємо із затримкою, інакше цей самий клік одразу його спрацює
+        setTimeout(() => {
+            document.addEventListener('click', () => submitOnce(), { once: true });
+        }, 400);
+    }
+
+    /* ---------- Кілька правильних відповідей ---------- */
+    function toggleMultiple(card) {
+        if (locked) return;
+        const input = card.querySelector('input');
+        input.checked = !input.checked;
+        card.classList.toggle('selected', input.checked);
+        card.setAttribute('aria-checked', String(input.checked));
+    }
+
+    function revealMultiple() {
+        cards.forEach(card => {
+            const picked = card.querySelector('input').checked;
+            const correct = card.dataset.correct === 'true';
+            if (picked && correct) markCorrect(card);
+            else if (picked && !correct) markIncorrect(card);
+            else if (!picked && correct) markMissed(card);
+            else card.classList.add('dim');
+        });
+        const btn = document.getElementById('submit-btn');
+        if (btn) btn.disabled = true;
+    }
+
+    if (isMultiple) {
+        form.addEventListener('submit', (e) => {
+            if (submitted) return;       // фінальна відправка після показу результату
+            e.preventDefault();
+            if (locked) return;
+            lock();
+            stopTimer();
+            revealMultiple();
+            submitOnce(1800);
+        });
+    } else {
+        // Для режиму з однією відповіддю форма відправляється лише через «Продовжити»
+        form.addEventListener('submit', (e) => {
+            if (submitted) return;
+            submitted = true;
+        });
+    }
+
+    /* ---------- Події карток ---------- */
+    cards.forEach(card => {
+        const handler = () => (isMultiple ? toggleMultiple(card) : chooseSingle(card));
+        card.addEventListener('click', handler);
+        card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handler();
+            }
         });
     });
+})();
 </script>
 {% endblock %}

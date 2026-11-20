@@ -36,6 +36,15 @@ class Quiz(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Створено")
 
+    def can_access(self, request):
+        """Публічний квіз доступний усім. Приватний: автору, адміну або тому, хто ввів код."""
+        if self.is_public:
+            return True
+        user = request.user
+        if user.is_authenticated and (user == self.author or user.is_superuser or getattr(user, 'role', '') == 'admin'):
+            return True
+        return self.id in request.session.get('unlocked_quizzes', [])
+
     def __str__(self):
         return self.title
 

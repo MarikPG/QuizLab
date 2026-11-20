@@ -19,6 +19,8 @@ def home_view(request):
         if code:
             quiz = Quiz.objects.filter(code=code).first()
             if quiz:
+                unlocked = set(request.session.get('unlocked_quizzes', []))
+                request.session['unlocked_quizzes'] = sorted(unlocked | {quiz.id})
                 return redirect('start_quiz', quiz_id=quiz.id)
             else:
                 messages.error(request, 'Квіз із таким кодом не знайдено.')
@@ -71,19 +73,25 @@ def add_question_view(request, quiz_id):
         formset = AnswerFormSet(request.POST, queryset=Answer.objects.none())
 
         if q_form.is_valid() and formset.is_valid():
-            question = q_form.save(commit=False)
-            question.quiz = quiz
-            question.order = quiz.questions.count() + 1
-            question.save()
+            filled = [f for f in formset if f.cleaned_data.get('text')]
 
-            for answer_form in formset:
-                if answer_form.cleaned_data and answer_form.cleaned_data.get('text'):
+            if len(filled) < 2:
+                messages.error(request, 'Додайте щонайменше два варіанти відповіді.')
+            elif not any(f.cleaned_data.get('is_correct') for f in filled):
+                messages.error(request, 'Позначте хоча б одну правильну відповідь.')
+            else:
+                question = q_form.save(commit=False)
+                question.quiz = quiz
+                question.order = quiz.questions.count() + 1
+                question.save()
+
+                for answer_form in filled:
                     answer = answer_form.save(commit=False)
                     answer.question = question
                     answer.save()
 
-            messages.success(request, 'Питання та варіанти відповідей додано!')
-            return redirect('quiz_manage', quiz_id=quiz.id)
+                messages.success(request, 'Питання та варіанти відповідей додано!')
+                return redirect('quiz_manage', quiz_id=quiz.id)
     else:
         q_form = QuestionForm()
         formset = AnswerFormSet(queryset=Answer.objects.none())
